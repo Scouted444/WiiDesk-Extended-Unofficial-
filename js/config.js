@@ -1,15 +1,11 @@
 var def_config = {
     musicVol: 0.5,
     sfxVol: 0.2,
+    clock24: true,
 }
-if (typeof(Storage) !== "undefined") {
-    if (!localStorage.getItem('wiidesk-demo-settings') && localStorage.getItem('wiidesk-demo-settings')) {
-        localStorage.setItem('wiidesk-demo-settings', localStorage.getItem('wiidesk-demo-settings'));
-    }
-    if (!localStorage.getItem('wiidesk-demo-channels') && localStorage.getItem('wiidesk-demo-channels')) {
-        localStorage.setItem('wiidesk-demo-channels', localStorage.getItem('wiidesk-demo-channels'));
-    }
-}
+
+function wdClone(obj) { return JSON.parse(JSON.stringify(obj)); }
+
 if (typeof(Storage) !== "undefined") {
     if (!localStorage.getItem('wiidesk-demo-settings')) {
         localStorage.setItem("wiidesk-demo-settings", JSON.stringify(def_config));
@@ -18,8 +14,19 @@ if (typeof(Storage) !== "undefined") {
 } else {
     alert('Local Storage is not support or disabled -- settings will not work!')
 }
-var userConfig = JSON.parse(localStorage.getItem('wiidesk-demo-settings'));
+
+var userConfig;
+try {
+    userConfig = JSON.parse(localStorage.getItem('wiidesk-demo-settings'));
+} catch (e) {}
+if (!userConfig || typeof userConfig !== 'object') userConfig = wdClone(def_config);
+// Fill in any settings added in newer versions
+Object.keys(def_config).forEach(function (k) {
+    if (userConfig[k] === undefined) userConfig[k] = def_config[k];
+});
+localStorage.setItem('wiidesk-demo-settings', JSON.stringify(userConfig));
 console.log("user config:", userConfig);
+
 var def_channels = [
     {
         id: 'disc',
@@ -51,7 +58,8 @@ var def_channels = [
         id: 'news',
         title: 'News Channel',
         assets: 'assets/channels/',
-        channelart: 'channelart/'
+        channelart: 'channelart/',
+        target: 'news/index.html'
     },
     {
         id: 'wiideskdiscord',
@@ -66,9 +74,30 @@ var def_channels = [
         }
     }
 ]
-localStorage.setItem("wiidesk-demo-channels", JSON.stringify(def_channels));
-var userChannels = JSON.parse(localStorage.getItem('wiidesk-demo-channels'));
+
+// Channels used to be overwritten with the defaults on every page load, which
+// threw away anything done in Manage Channels. They're now kept between visits.
+// Bump CHANNELS_VERSION when a built-in channel is added or gets a new target:
+// the next load adds missing built-ins and fills in missing targets, and leaves
+// the user's order, edits and custom channels alone.
+var CHANNELS_VERSION = 2;
+var userChannels;
+try {
+    userChannels = JSON.parse(localStorage.getItem('wiidesk-demo-channels'));
+} catch (e) {}
+if (!Array.isArray(userChannels)) {
+    userChannels = wdClone(def_channels);
+} else if ((+localStorage.getItem('wiidesk-channels-version') || 0) < CHANNELS_VERSION) {
+    def_channels.forEach(function (d) {
+        var existing = userChannels.find(function (c) { return c.id === d.id; });
+        if (!existing) userChannels.push(wdClone(d));
+        else if (d.target && !existing.target) existing.target = d.target;
+    });
+}
+localStorage.setItem('wiidesk-demo-channels', JSON.stringify(userChannels));
+localStorage.setItem('wiidesk-channels-version', CHANNELS_VERSION);
 console.log("user channels: ", userChannels);
+
 function resetConfig(confirm) {
     if (confirm == true) {
         localStorage.setItem("wiidesk-demo-settings", JSON.stringify(def_config));
@@ -86,4 +115,12 @@ function resetChannels(confirm) {
     } else {
         console.error("loadDefaultChannels: MAKE SURE YOU'D LIKE TO DO THIS BY USING ADDING \"true\" IN THE FUNCTION. THERE'S NO TURNING BACK!!")
     }
+}
+
+// Erases everything WiiDesk has saved (settings, channels, messages) and restarts.
+function formatSystemMemory() {
+    Object.keys(localStorage)
+        .filter(function (k) { return k.indexOf('wiidesk') === 0; })
+        .forEach(function (k) { localStorage.removeItem(k); });
+    location.reload();
 }

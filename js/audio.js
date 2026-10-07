@@ -1,6 +1,9 @@
 var userConfig = JSON.parse(localStorage.getItem('wiidesk-demo-settings'));
 
-var bgMusicAudio = new Audio('audio/bg-music.mp3');
+// Pages in subfolders set window.AUDIO_BASE = '../audio/' before loading this file
+var AUDIO_BASE = window.AUDIO_BASE || 'audio/';
+
+var bgMusicAudio = new Audio(AUDIO_BASE + 'bg-music.mp3');
 bgMusicAudio.loop = true;
 bgMusicAudio.volume = userConfig ? userConfig.musicVol : 0.5;
 
@@ -66,7 +69,7 @@ function playMusic(name, vol, loop) {
     if (!name) return alert('You must provide a file name from the "audio/" dir.!');
     if (!vol) return alert('You must provide a volume value!');
     
-    var music = new Audio('audio/' + name);
+    var music = new Audio(AUDIO_BASE + name);
     music.volume = vol;
     music.loop = loop ? true : false;
     music.play().catch(e => console.log('Music play failed:', e));
@@ -76,7 +79,7 @@ function playSFX(name, vol) {
     if (!name) return console.log('playSFX: No file name provided');
     if (vol === undefined) vol = 0.5;
     
-    var sfx = new Audio('audio/' + name);
+    var sfx = new Audio(AUDIO_BASE + name);
     sfx.volume = vol;
     sfx.play().catch(e => console.log('SFX play failed:', name, e));
 }
@@ -84,7 +87,7 @@ function playSFX(name, vol) {
 function playSFXMulti(vol, names) {
     if (Array.isArray(names)) {
         names.forEach(name => {
-            var sfx = new Audio('audio/' + name);
+            var sfx = new Audio(AUDIO_BASE + name);
             sfx.volume = vol;
             sfx.play().catch(e => console.log('Multi-SFX play failed:', name, e));
         });

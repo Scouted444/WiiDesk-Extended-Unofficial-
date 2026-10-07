@@ -12,11 +12,16 @@ function showDateTime() {
   
     var hour = date.getHours();
     var min = date.getMinutes().toString().padStart(2, '0');
-    var time = hour + ":" + min;
+    var time;
+    if (typeof userConfig !== 'undefined' && userConfig.clock24 === false) {
+        time = ((hour % 12) || 12) + ":" + min + (hour < 12 ? " AM" : " PM");
+    } else {
+        time = hour + ":" + min;
+    }
     
-    hourDiv.innerText = `${time}`;
-    dateDiv.innerText = `${today}`;
-    dateDiary.innerText = `${today}`;
+    if (hourDiv) hourDiv.innerText = `${time}`;
+    if (dateDiv) dateDiv.innerText = `${today}`;
+    if (dateDiary) dateDiary.innerText = `${today}`;
 }
 
 function startDateTime() {
@@ -35,7 +40,7 @@ function zip() {
 function rm2() {
     playSFX('returntomenu.mp3', userConfig.sfxVol);
     setTimeout(() => {document.body.classList.add("fadeOut");}, 1000);
-    setTimeout(() => {window.location.href = "/?skipwarn=true";}, 1500);
+    setTimeout(() => {window.location.href = (window.ROOT_BASE || "/") + "?skipwarn=true";}, 1500);
 }
 
 function settingsIn() {
@@ -64,6 +69,10 @@ function startup(params) {
         setTimeout(() => {
             document.querySelector('.main-menu').style = '';
         }, 500);
+        // "You've got mail" once the menu has settled (defined in msgboard.js)
+        setTimeout(() => {
+            if (window.mbAnnounceNew) mbAnnounceNew();
+        }, 2500);
     }, 3000);
 }
 
@@ -82,7 +91,9 @@ window.addEventListener('load', () => {
         });
     });
     
-    document.querySelector('.main-menu').addEventListener('mouseover', (e) => {
+    var mainMenu = document.querySelector('.main-menu');
+    if (!mainMenu) return; // sub-pages (news/) have no channel grid
+    mainMenu.addEventListener('mouseover', (e) => {
         if (e.target.closest('.ch.occupied') && !e.target.closest('.ch.occupied').hasAttribute('data-hovered')) {
             e.target.closest('.ch.occupied').setAttribute('data-hovered', 'true');
             playSFX('button-hover.mp3', userConfig.sfxVol);
