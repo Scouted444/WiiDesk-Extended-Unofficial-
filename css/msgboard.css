@@ -1,0 +1,281 @@
+/* ===== Message Board ===== */
+
+.msgboard .mb-main {
+    position: relative;
+    z-index: 1;
+    display: flex;
+    gap: 3vw;
+    width: 92vw;
+    height: 66vh;
+    margin-bottom: 16vh;
+}
+
+.msgboard .mb-calendar,
+.msgboard .mb-day {
+    background-color: #fff;
+    border: 0.25vh solid #a0a0a0;
+    border-radius: 3vh;
+    outline: 0.6vh solid white;
+    box-shadow: 1.2vh 1.2vh #0000001e;
+    padding: 2vh 2.2vw;
+    box-sizing: border-box;
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+}
+
+.msgboard .mb-calendar { flex: 1.5; }
+.msgboard .mb-day { flex: 1; }
+
+/* -- calendar -- */
+.mb-cal-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    font-size: 3.6vh;
+    color: #666;
+    margin-bottom: 1.2vh;
+}
+
+.mb-nav {
+    width: 5.5vh;
+    height: 5.5vh;
+    border-radius: 50%;
+    border: 0.2vh solid #b5b5b5;
+    background: linear-gradient(#fff, #e6e6e6);
+    color: #666;
+    font-size: 3.6vh;
+    line-height: 1;
+    padding: 0 0 0.6vh;
+    cursor: inherit;
+}
+.mb-nav:hover { transform: scale(1.12); border-color: #3bb7ff; color: #1a8bd0; }
+
+.mb-cal-dow,
+.mb-cal-grid {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 0.6vh;
+}
+
+.mb-cal-dow {
+    text-align: center;
+    font-size: 2vh;
+    color: #999;
+    margin-bottom: 0.8vh;
+}
+
+.mb-cal-grid {
+    flex: 1;
+    grid-auto-rows: 1fr;
+    min-height: 0;
+}
+
+.mb-cell {
+    position: relative;
+    border: 0.15vh solid #d8d8d8;
+    border-radius: 1vh;
+    padding: 0.6vh 0.8vh;
+    font-size: 2.4vh;
+    color: #666;
+    cursor: inherit;
+    user-select: none;
+}
+.mb-cell.blank { border-color: transparent; }
+.mb-cell:not(.blank):hover { background: #e9f6ff; border-color: #3bb7ff; }
+.mb-cell.today { border: 0.35vh solid #3bb7ff; color: #1a8bd0; font-weight: bold; }
+.mb-cell.selected { background: #3bb7ff; color: #fff; border-color: #3bb7ff; }
+
+.mb-cell.has-mail::after {
+    content: '';
+    position: absolute;
+    right: 0.9vh;
+    bottom: 0.9vh;
+    width: 1.5vh;
+    height: 1.5vh;
+    border-radius: 50%;
+    background: #b5b5b5;
+}
+.mb-cell.has-mail.unread::after { background: #3bb7ff; box-shadow: 0 0 1vh #3bb7ffcc; }
+.mb-cell.selected.has-mail::after { background: #fff; box-shadow: none; }
+
+/* -- day panel -- */
+.mb-day h2 {
+    margin: 0 0 1.5vh;
+    font-size: 3vh;
+    color: #555;
+    font-weight: normal;
+}
+
+.mb-letters {
+    flex: 1;
+    min-height: 0;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 1.2vh;
+    scrollbar-width: thin;
+}
+
+.mb-empty {
+    color: #aaa;
+    font-size: 2.2vh;
+    text-align: center;
+    margin-top: 4vh;
+}
+
+.mb-letter {
+    display: flex;
+    align-items: center;
+    gap: 1.5vh;
+    padding: 1.2vh 1.5vh;
+    background: #f6f8fa;
+    border: 0.2vh solid #c6c6c6;
+    border-radius: 1.6vh;
+    cursor: inherit;
+    flex-shrink: 0;
+}
+.mb-letter:hover { border-color: #3bb7ff; background: #eef8ff; }
+
+.mb-letter-icon::before {
+    content: '\2709';
+    font-size: 4vh;
+    line-height: 1;
+    color: #999;
+}
+.mb-letter.unread .mb-letter-icon::before { color: #3bb7ff; text-shadow: 0 0 1vh #3bb7ff88; }
+
+.mb-letter-text {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+}
+.mb-letter-text strong { font-size: 2.2vh; color: #444; }
+.mb-letter.unread .mb-letter-text strong { color: #1a8bd0; }
+.mb-letter-preview {
+    font-size: 1.9vh;
+    color: #888;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.mb-write-row {
+    display: flex;
+    justify-content: center;
+    padding-top: 1.5vh;
+}
+.mb-write-row .alt-btn { margin: 0 4vw 0 2vw; }
+
+/* -- opened letter / editor (builds on the .memo styles in style.css) -- */
+.msgboard .memo .lines {
+    padding: 3vh 2vh;
+    max-height: 50vh;
+    overflow-y: auto;
+    scrollbar-width: thin;
+}
+.msgboard .memo .lines span {
+    font-size: 2.6vh;
+    line-height: 4.6vh;
+    min-height: 4.6vh;
+}
+
+.msgboard .memo textarea {
+    display: block;
+    box-sizing: border-box;
+    width: calc(100% - 4vh);
+    height: 41.4vh;
+    margin: 3vh 2vh;
+    padding: 0 0 0 5vh;
+    border: none;
+    outline: none;
+    resize: none;
+    background: repeating-linear-gradient(transparent 0, transparent 4.5vh, gray 4.5vh, gray 4.6vh);
+    background-attachment: local;
+    font-family: serif;
+    font-size: 2.6vh;
+    line-height: 4.6vh;
+    color: #666;
+    cursor: text;
+}
+
+.msgboard .mb-actions {
+    position: absolute;
+    bottom: 4vh;
+    left: 0;
+    right: 0;
+    display: flex;
+    justify-content: center;
+    gap: 9vw;
+    padding-right: 4vw;
+}
+
+/* -- mail indicator on the Wii Menu's bottom bar -- */
+.bottom-bar .lateral .mail-badge {
+    position: absolute;
+    right: 5.5vh;
+    top: 12%;
+    min-width: 3.6vh;
+    height: 3.6vh;
+    box-sizing: border-box;
+    padding: 0 0.6vh;
+    border-radius: 3vh;
+    border: 0.25vh solid #fff;
+    background: radial-gradient(circle at 35% 30%, #9fe0ff, #1a9be6);
+    color: #fff;
+    font-size: 2.2vh;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 0 1.5vh #3bb7ffcc;
+    pointer-events: none;
+    z-index: 3;
+    animation: mb-pulse 1.6s ease-in-out infinite;
+}
+
+@keyframes mb-pulse {
+    0%, 100% { box-shadow: 0 0 1vh #3bb7ff88; }
+    50% { box-shadow: 0 0 2.2vh #3bb7ffff; }
+}
+
+/* portrait screens: stack the calendar over the day list */
+@media (max-aspect-ratio: 4/3) {
+    .msgboard .mb-main {
+        flex-direction: column;
+        width: 94vw;
+        height: 72vh;
+        gap: 2vh;
+        margin-bottom: 18vh;
+    }
+    .msgboard .memo { width: 88vw; }
+    .msgboard .mb-actions { gap: 14vw; }
+}
+
+/* ===== Wii Settings ===== */
+
+#wiiSettingsView { overflow: hidden; }
+
+.ws-panel {
+    max-width: 78vw;
+    padding: 2vh 3vw 3vh;
+    background: rgba(255, 255, 255, 0.07);
+    border-radius: 2vh;
+}
+
+.ws-row {
+    display: grid;
+    grid-template-columns: 24vh 1fr 9vh;
+    align-items: center;
+    gap: 2vw;
+    margin: 3vh 0;
+    color: #fff;
+    font-size: 2.6vh;
+}
+.ws-row input[type="range"] { width: 100%; accent-color: #37bef4; cursor: inherit; }
+.ws-val { color: #ddd; font-size: 2.2vh; text-align: right; }
+.ws-toggle { display: flex; gap: 1vw; grid-column: 2 / 4; }
+.ws-row > .cm-btn { grid-column: 2 / 4; justify-self: start; }
+
+.ws-panel .cm-btn { font-size: 2.2vh; padding: 1.2vh 2.5vh; cursor: inherit; }
+.cm-btn.danger { background: #d9534f; color: #fff; }
+
+.ws-about { color: #aaa; font-size: 1.8vh; margin: 4vh 0 0; line-height: 1.5; }
