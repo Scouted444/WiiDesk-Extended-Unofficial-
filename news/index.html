@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>News Channel | WiiDesk</title>
+    <link rel="icon" href="../assets/favicon.ico" type="image/x-icon" />
+    <link rel="icon" href="../assets/favicon.png" type="image/png" />
+    <link rel="stylesheet" href="../css/style.css" />
+    <script>
+        // This page lives in a subfolder, so tell the shared scripts where the root is
+        window.AUDIO_BASE = '../audio/';
+        window.ASSET_BASE = '../';
+        window.ROOT_BASE = '../';
+    </script>
+    <script src="../js/jquery.js"></script>
+    <script src="../js/audio.js"></script>
+    <script src="../js/config.js"></script>
+    <script src="../js/script.js"></script>
+    <script src="../js/homemenu.js"></script>
+    <script src="news.js"></script>
+    <style>
+        body {
+            animation: fadeIn 500ms linear forwards;
+            background: linear-gradient(60deg, #1a5507, #208920, #1a5407);
+            color: #fff;
+        }
+        .pattern {
+            position: absolute; inset: 0;
+            background-image: url('../channelart/news/bg.png');
+            background-size: 9vh;
+            opacity: 0.1;
+            pointer-events: none;
+        }
+        .map {
+            position: absolute; left: 0; right: 0; bottom: 6vh;
+            height: 80vh;
+            background: url('../channelart/news/map.png') center / contain no-repeat;
+            opacity: 0.25;
+            pointer-events: none;
+        }
+        .title {
+            position: absolute; top: 2vh; left: 4vw;
+            font-family: 'TitleBold';
+            font-size: 9vh;
+            letter-spacing: -0.3vh;
+            text-shadow: 0 0.3vh 1.2vh black;
+        }
+        .tabs {
+            position: absolute; top: 4vh; right: 4vw;
+            display: flex; gap: 1vw;
+        }
+        .tabs button {
+            font-size: 2.4vh;
+            padding: 1vh 2.4vh;
+            border-radius: 5vh;
+            background: #ffffff22;
+            border: 0.2vh solid #ffffff66;
+            color: #fff;
+        }
+        .tabs button:hover { background: #ffffff44; }
+        .tabs button.on { background: #fff; color: #1a5507; }
+
+        .layout {
+            position: absolute; top: 14vh; bottom: 14vh; left: 4vw; right: 4vw;
+            display: flex; gap: 2.5vw;
+            min-height: 0;
+        }
+        .list {
+            flex: 1;
+            overflow-y: auto;
+            display: flex; flex-direction: column; gap: 1.2vh;
+            padding-right: 0.8vw;
+            scrollbar-width: thin;
+        }
+        .item {
+            background: #00000044;
+            border: 0.2vh solid #ffffff44;
+            border-left: 1vh solid #ffffffaa;
+            border-radius: 1.2vh;
+            padding: 1.4vh 1.6vw;
+            flex-shrink: 0;
+        }
+        .item:hover { background: #00000066; transform: translateX(0.6vw); }
+        .item.on { background: #ffffffee; color: #1a5507; border-left-color: #6cd04a; }
+        .item .meta { font-size: 1.8vh; opacity: 0.8; margin-bottom: 0.4vh; }
+        .item .head { font-size: 2.6vh; }
+
+        .reader {
+            flex: 1.4;
+            background: #ffffffee;
+            color: #333;
+            border-radius: 2vh;
+            padding: 3vh 2.4vw;
+            overflow-y: auto;
+            box-shadow: 1.2vh 1.2vh #0000002e;
+            scrollbar-width: thin;
+        }
+        .reader .meta { font-size: 2vh; color: #1a7a1a; margin-bottom: 1vh; }
+        .reader h1 { font-size: 3.6vh; margin: 0 0 2vh; color: #1a5507; font-weight: normal; }
+        .reader p { font-size: 2.5vh; line-height: 1.5; margin: 0 0 2vh; color: #444; }
+        .empty { font-size: 2.6vh; opacity: 0.8; margin-top: 4vh; text-align: center; }
+
+        .ticker {
+            position: absolute; left: 0; right: 0; bottom: 0;
+            height: 10vh;
+            background: #0000008a;
+            overflow: hidden;
+            display: flex; align-items: center;
+        }
+        .ticker .track {
+            display: flex; align-items: center;
+            width: max-content;
+            animation: ticker 30s linear infinite;
+            font-size: 4.2vh;
+        }
+        .ticker .track span { display: flex; align-items: center; }
+        .ticker .track img { height: 6vh; margin: 0 3vh; }
+        @keyframes ticker {
+            from { transform: translateX(100vw); }
+            to { transform: translateX(-100%); }
+        }
+
+        @media (max-aspect-ratio: 4/3) {
+            .layout { flex-direction: column; }
+            .title { font-size: 7vh; }
+        }
+    </style>
+</head>
+<body>
+    <div class="pattern"></div>
+    <div class="map"></div>
+    <div class="title">News Channel</div>
+    <div class="tabs" id="tabs"></div>
+
+    <div class="layout">
+        <div class="list" id="list"></div>
+        <div class="reader" id="reader"></div>
+    </div>
+
+    <div class="ticker"><div class="track" id="track"></div></div>
+
+    <script>
+        (function () {
+            var CATS = ['All'];
+            WIIDESK_NEWS.forEach(function (n) { if (CATS.indexOf(n.category) === -1) CATS.push(n.category); });
+            var cat = 'All';
+            var current = 0;
+
+            function sfx(name) { playSFX(name, userConfig.sfxVol); }
+            function mk(tag, cls, text) {
+                var e = document.createElement(tag);
+                if (cls) e.className = cls;
+                if (text !== undefined) e.textContent = text;
+                return e;
+            }
+            function niceDate(d) {
+                var p = d.split('-');
+                var m = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+                return m[+p[1] - 1] + ' ' + (+p[2]) + ', ' + p[0];
+            }
+            function visible() {
+                return WIIDESK_NEWS.filter(function (n) { return cat === 'All' || n.category === cat; });
+            }
+
+            function renderTabs() {
+                var tabs = document.getElementById('tabs');
+                tabs.innerHTML = '';
+                CATS.forEach(function (c) {
+                    var b = mk('button', c === cat ? 'on' : '', c);
+                    b.addEventListener('mouseenter', function () { sfx('button-hover.mp3'); });
+                    b.addEventListener('click', function () {
+                        cat = c; current = 0;
+                        sfx('button-select.mp3');
+                        renderTabs(); renderList(); renderReader();
+                    });
+                    tabs.appendChild(b);
+                });
+            }
+
+            function renderList() {
+                var list = document.getElementById('list');
+                list.innerHTML = '';
+                var items = visible();
+                if (!items.length) { list.appendChild(mk('div', 'empty', 'No news right now.')); return; }
+                items.forEach(function (n, i) {
+                    var row = mk('div', 'item' + (i === current ? ' on' : ''));
+                    row.appendChild(mk('div', 'meta', niceDate(n.date) + '  \u00b7  ' + n.category));
+                    row.appendChild(mk('div', 'head', n.headline));
+                    row.addEventListener('mouseenter', function () { sfx('button-hover.mp3'); });
+                    row.addEventListener('click', function () {
+                        current = i;
+                        sfx('button-select.mp3');
+                        renderList(); renderReader();
+                    });
+                    list.appendChild(row);
+                });
+            }
+
+            function renderReader() {
+                var r = document.getElementById('reader');
+                r.innerHTML = '';
+                var n = visible()[current];
+                if (!n) { r.appendChild(mk('div', 'empty', 'Nothing to read yet.')); return; }
+                r.appendChild(mk('div', 'meta', niceDate(n.date) + '  \u00b7  ' + n.category));
+                r.appendChild(mk('h1', '', n.headline));
+                n.body.split('\n\n').forEach(function (para) { r.appendChild(mk('p', '', para)); });
+            }
+
+            function renderTicker() {
+                var track = document.getElementById('track');
+                // headlines twice so the loop never shows a gap
+                for (var k = 0; k < 2; k++) {
+                    WIIDESK_NEWS.slice(0, 5).forEach(function (n) {
+                        var s = mk('span');
+                        var img = document.createElement('img');
+                        img.src = '../channelart/news/pinpoint.png';
+                        s.appendChild(img);
+                        s.appendChild(document.createTextNode(n.headline));
+                        track.appendChild(s);
+                    });
+                }
+            }
+
+            renderTabs(); renderList(); renderReader(); renderTicker();
+        })();
+    </script>
+</body>
+</html>
