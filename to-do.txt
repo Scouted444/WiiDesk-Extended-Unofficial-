@@ -13,9 +13,15 @@ deprecated, better use 16:9
 to-do:
 - mobile adaption
 - everybody votes channel (for user feedback on the channel and bug reporting)
-- news wiiconnect24 channel (changelog of the website)
+- news wiiconnect24 channel (changelog of the website) -- DONE, add stories at the top of news/news.js
 - finish the rest of the channels if possible (consider Mii)
 
 future considerations:
 - dolphin vm in wasm
 - desktop app with electron 🤝 working shop channel (note from like july 2024, "done, ktg5/wiidesk-electron")
+
+done:
+- message board (calendar, memos, letters from WiiDesk; add new letters in js/msgboard.js SYSTEM_LETTERS)
+- Wii Settings (volume, 12/24h clock, format system memory)
+- channel layout persists between visits
+- right-click opens the HOME menu

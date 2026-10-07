@@ -8,6 +8,7 @@
     <link rel="icon" href="assets/favicon.ico" type="image/x-icon" />
     <link rel="icon" href="assets/favicon.png" type="image/png" />
     <link rel="stylesheet" href="css/style.css" />
+    <link rel="stylesheet" href="css/msgboard.css" />
     <script src="js/script.js"></script>
     <script src="js/jquery.js"></script>
     <script src="js/howler.min.js"></script>
@@ -15,6 +16,7 @@
     <script src="js/audio.js"></script>
     <script src="js/config.js"></script>
     <script src="js/channels.js"></script>
+    <script src="js/msgboard.js"></script>
 
     <meta property="og:site_name" content="WiiDesk" />
 	<meta property="og:type" content="website" />
@@ -138,6 +140,7 @@
             <div class="lateral right">
                 <img src="assets/right-button.png" class="right-btn" />
                 <img src="assets/mail-button.png" class="diary-btn buttonlike" onclick="playSFX('button-select-big.mp3', userConfig.sfxVol)" />
+                <span class="mail-badge" id="mbBadge" style="display:none;"></span>
                 <span class="tag">Wii Message Board</span>
             </div>
         </div>
@@ -145,16 +148,42 @@
 
     <div class="msgboard">
         <div class="bg"></div>
-        <div class="opened">
-            <div class="memo">
-                <span class="title">Memo</span>
-                <div class="lines">
-                    <span>This is a nice sample letter,</span>
-                    <span>with multiple lines.</span>
+
+        <div class="mb-main">
+            <div class="mb-calendar">
+                <div class="mb-cal-head">
+                    <button class="mb-nav" id="mbPrev" title="Previous month">&#8249;</button>
+                    <span id="mbMonthLabel"></span>
+                    <button class="mb-nav" id="mbNext" title="Next month">&#8250;</button>
+                </div>
+                <div class="mb-cal-dow">
+                    <span>Sun</span><span>Mon</span><span>Tue</span><span>Wed</span><span>Thu</span><span>Fri</span><span>Sat</span>
+                </div>
+                <div class="mb-cal-grid" id="mbGrid"></div>
+            </div>
+            <div class="mb-day">
+                <h2 id="mbDayTitle"></h2>
+                <div class="mb-letters" id="mbLetters"></div>
+                <div class="mb-write-row">
+                    <a class="alt-btn" id="mbWrite">Write Memo</a>
                 </div>
             </div>
-            <a class="alt-btn back" onmouseover="playSFX('button-hover.mp3', userConfig.sfxVol)">Back</a>
         </div>
+
+        <div class="opened" id="mbOpened">
+            <div class="memo">
+                <span class="title" id="mbMemoTitle">Memo</span>
+                <div class="lines" id="mbMemoLines"></div>
+                <textarea id="mbMemoText" maxlength="500" spellcheck="false" placeholder="Write your memo here..." style="display:none;"></textarea>
+            </div>
+            <div class="mb-actions">
+                <a class="alt-btn" id="mbSave">Save</a>
+                <a class="alt-btn" id="mbEdit">Edit</a>
+                <a class="alt-btn" id="mbDelete">Delete</a>
+                <a class="alt-btn" id="mbBack">Back</a>
+            </div>
+        </div>
+
         <div class="bottom">
             <span id="date2"></span>
             <div class="lateral">
@@ -183,10 +212,46 @@
             </div>
             <div class="cells">
                 <a class="mngch buttonlike" id="openChannelManagerBtn" onmouseover="playSFX('button-hover.mp3', userConfig.sfxVol)"></a>
-                <a class="stngs buttonlike" href="settings/" onmouseover="playSFX('button-hover.mp3', userConfig.sfxVol)" onclick="playSFX('button-select-big.mp3', userConfig.sfxVol)"></a>
+                <a class="stngs buttonlike" id="openWiiSettingsBtn" onmouseover="playSFX('button-hover.mp3', userConfig.sfxVol)" onclick="playSFX('button-select-big.mp3', userConfig.sfxVol)"></a>
             </div>
             <div class="bottombar">
                 <a class="alt-btn close" onmouseover="playSFX('button-hover.mp3', userConfig.sfxVol)" onclick="playSFX('button-cancel.mp3', userConfig.sfxVol)">Back</a>
+            </div>
+        </div>
+
+        <div class="settings-content" id="wiiSettingsView" style="display:none;">
+            <div class="topbar">
+                <img src="assets/wii-logo.svg" />
+            </div>
+            <div class="cm-wrap">
+                <h1 class="cm-title">Wii Settings</h1>
+                <div class="ws-panel">
+                    <div class="ws-row">
+                        <label for="wsSfx">Sound Effects</label>
+                        <input type="range" id="wsSfx" min="0" max="1" step="0.05" />
+                        <span class="ws-val" id="wsSfxVal"></span>
+                    </div>
+                    <div class="ws-row">
+                        <label for="wsMusic">Music</label>
+                        <input type="range" id="wsMusic" min="0" max="1" step="0.05" />
+                        <span class="ws-val" id="wsMusicVal"></span>
+                    </div>
+                    <div class="ws-row">
+                        <label>Clock</label>
+                        <div class="ws-toggle" id="wsClock">
+                            <button class="cm-btn" data-h24="true">24-hour</button>
+                            <button class="cm-btn" data-h24="false">12-hour</button>
+                        </div>
+                    </div>
+                    <div class="ws-row">
+                        <label>Data</label>
+                        <button class="cm-btn danger" id="wsFormat">Format Wii System Memory</button>
+                    </div>
+                    <p class="ws-about">WiiDesk &middot; Based upon Wii System 4.3E<br>Channels, messages and settings are saved in this browser.</p>
+                </div>
+            </div>
+            <div class="bottombar">
+                <a class="alt-btn" id="wsBack" onmouseover="playSFX('button-hover.mp3', userConfig.sfxVol)">Back</a>
             </div>
         </div>
 
@@ -501,6 +566,53 @@
             $("#cmBack").click(() => {
                 playSFX('button-cancel.mp3', userConfig.sfxVol);
                 showSettingsView('wiiMainView');
+            });
+
+            // ----- Wii Settings -----
+            function wsSync() {
+                $('#wsSfx').val(userConfig.sfxVol);
+                $('#wsMusic').val(userConfig.musicVol);
+                $('#wsSfxVal').text(Math.round(userConfig.sfxVol * 100) + '%');
+                $('#wsMusicVal').text(Math.round(userConfig.musicVol * 100) + '%');
+                var h24 = userConfig.clock24 !== false;
+                $('#wsClock button').each(function () {
+                    $(this).toggleClass('primary', ($(this).data('h24') === true) === h24)
+                           .toggleClass('secondary', ($(this).data('h24') === true) !== h24);
+                });
+            }
+            function wsSave() {
+                localStorage.setItem('wiidesk-demo-settings', JSON.stringify(userConfig));
+            }
+            $("#openWiiSettingsBtn").click(() => {
+                showSettingsView('wiiSettingsView');
+                wsSync();
+            });
+            $("#wsBack").click(() => {
+                playSFX('button-cancel.mp3', userConfig.sfxVol);
+                showSettingsView('wiiMainView');
+            });
+            $('#wsSfx').on('input', function () {
+                userConfig.sfxVol = +this.value;
+                wsSave(); wsSync();
+            }).on('change', function () {
+                playSFX('button-select.mp3', userConfig.sfxVol);
+            });
+            $('#wsMusic').on('input', function () {
+                userConfig.musicVol = +this.value;
+                bgMusicAudio.volume = userConfig.musicVol;
+                if (typeof introBgMusic !== 'undefined' && introBgMusic) introBgMusic.volume = userConfig.musicVol;
+                wsSave(); wsSync();
+            });
+            $('#wsClock button').click(function () {
+                userConfig.clock24 = $(this).data('h24') === true;
+                wsSave(); wsSync(); showDateTime();
+                playSFX('button-select.mp3', userConfig.sfxVol);
+            }).on('mouseenter', () => playSFX('button-hover.mp3', userConfig.sfxVol));
+            $('#wsFormat').click(() => {
+                playSFX('button-select-big.mp3', userConfig.sfxVol);
+                cmConfirm('Format Wii System Memory?\nAll channels, messages and settings will be erased.', () => {
+                    formatSystemMemory();
+                });
             });
         });
 
@@ -824,25 +936,6 @@
                 cmRenderGrid();
                 cmToast('Reset to defaults');
             });
-        });
-
-        // MESSAGE BOARD
-        $(".card.buttonlike").click(event => {
-            $(".opened").css("display", "flex");
-            $(".bg").css("display", "block");
-        });
-
-        $(".alt-btn.back").click(event => {
-            $(".opened").css("display", "none");
-            $(".bg").css("display", "none");
-        });
-
-        $(".backtowiimenu").click(event => {
-            $(".msgboard").fadeOut();
-        });
-
-        $(".diary-btn").click(event => {
-            $(".msgboard").css("display", "flex");
         });
     </script>
 </body>
